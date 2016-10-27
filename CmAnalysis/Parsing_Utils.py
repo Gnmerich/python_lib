@@ -1,9 +1,11 @@
 def ParseCmscanTblout(filename):
     '''Parse the Output of cmscan --tblout
+    For detailed description of the .tblout format, please refer to
+    http://eddylab.org/infernal/Userguide.pdf page 59.
     Args:
         filename(string)
     Returns:
-        query_summmary(dic) - Dictionary{QueryName : [List of CMscan Hits as dics]}
+        hits(List) - List[{Column_name : Column_content}, ..]
     '''
     hits = []
 
@@ -25,14 +27,15 @@ def ParseCmscanTblout(filename):
             #if len(data) != 17:
             #    raise ValueError('Could not parse ' + filename)
             dic = {'name': data[0], 'accession': data[1],
-            'query_name': data[2], 'accesion_mdl': data[3],
+            'query_name': data[2], 'accession_mdl': data[3],
             'mdl': data[4],
             'mdl_from': data[5], 'mdl_to': data[6],
             'from': data[7], 'to': data[8],
             'strand': data[9], 'trunc': data[10],
             'pass': data[11], 'gc': data[12],
             'bias': data[13],'score': data[14],
-            'e-value': data[15], 'inc': data[16]}
+            'e-value': data[15], 'inc': data[16],
+            'description' : ' '.join(data[17:])}
 
             hits.append(dic)
 
@@ -41,8 +44,31 @@ def ParseCmscanTblout(filename):
 
 
 def ParseCmscanStdOut(filename):
+    # TODO - Compared to the tblout-version, we also parse the seed/query alignment along with the appropriate secondary structure
+    '''Parse the STDOUT of cmscan
+    For detailed description of the format, please refer to
+    http://eddylab.org/infernal/Userguide.pdf page 97.
+    Args:
+        filename(string)
+    Returns:
+        hits(List) - List[{Column_name : Column_content}, ..]
+    '''
     print 'Not implemented yet'
-    pass
+    sys.exit()
+    hits = []
+
+    #Handle non-existing file TODO - use with keyword (much more elegant)
+    try:
+        STDOUTFILE = open(filename)
+    except IOError:
+        print 'No such file!'
+        sys.exit() #remains here until i figure out how to solve properly TODO
+
+    for l in STDOUTFILE:
+        break
+
+    STDOUTFILE.close()
+    return
 
 
 def ParseSequenceFile(filename):
@@ -87,6 +113,7 @@ def AlignLoci(outname, fasta, loci):
     #Then perform alifold, mlocarna, (or AliDot) on it
     return 0
 
+
 def WussToVienna(wuss):
     '''wuss2vienna - convert a WUSS Secondary Structure to Dot-Bracket Format
     Args:
@@ -109,9 +136,6 @@ def WussToVienna(wuss):
 
     return vienna
 
-
-if __name__ == "__main__":
-    print "Just a module.."
 
 __author__ = "romanoch"
 __date__ = "$Oct 24, 2016 3:49:21 PM$"
