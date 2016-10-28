@@ -81,37 +81,11 @@ def ParseSequenceFile(filename):
                 recs.append(r)
         except IOError:
             print('Could not open ' + filename)
-            #sys.exit() #TODO
+            #sys.exit() #TODO Don't know whether i need those excepts
         except ValueError:
             print('Could not use format: ' + fmt)
             continue
     return recs
-
-
-def AlignLoci(outname, fasta, loci):
-    '''AlignLoci - build a sequence alignment from several loci
-    Args:
-        outname - name of the outfile
-        fasta(string) - File containing Sequences in FASTA-format
-        loci - list of tuples (FASTA-header, from, to, inc)
-    Returns:
-
-    '''
-    from Bio import SeqIO
-
-    records = {}
-    FAin = open(fasta, "rU")
-    for rec in SeqIO.parse(FAin, 'fasta'):
-        records[rec.id] = rec
-
-    FAout = open(outname, 'w')
-    for i in loci:
-        id, fr, to, inc = i
-        seq = records[id]
-        SeqIO.write(seq[int(fr):int(to)], FAout, 'fasta')
-
-    #Then perform alifold, mlocarna, (or AliDot) on it
-    return 0
 
 
 def WussToVienna(wuss):

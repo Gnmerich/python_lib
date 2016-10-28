@@ -2,7 +2,8 @@ __author__ = "romanoch"
 __date__ = "$Oct 24, 2016 2:04:42 PM$"
 
 if __name__ == "__main__":
-    print "Hello World"
+    print "Not executable"
+    sys.exit()
 
 
 class CmAnalysis:
@@ -10,7 +11,7 @@ class CmAnalysis:
     '''
     import Parsing_Utils as PU
     from Bio import SeqIO
-    from CmHit import CmHit
+    from CmHit import CmHit, CompoundCmHit
 
     def __init__(self, tblout_fi=None, seq_fi=None):
         self.cm_hits = None
@@ -19,31 +20,39 @@ class CmAnalysis:
         self.seqids_withhits = None
         self.seen_cms = None
         self.unique_loci = None
+        self.seqname_to_hits = {} #TODO rewrite __init__, is too bloated
 
         #Parse CMsearch/Sequence Data if present
-        if tblout:
-            self.cm_hits = _GetCmHits(tblout)
+        if tblout_fi:
+            self.cm_hits = _GetCmHits(tblout_fi)
             self.seen_cms = set()
             self.seqids_withhits = set()
-        if fasta:
-            self.seq_records = _GetSeqRecords(fasta)
+        if seq_fi:
+            self.seq_records = _GetSeqRecords(seq_fi)
             self.seqids_general = set()
 
-        #Gather information about how many hits we have
+        #Gather information about how many hits we have and how they are mapped
         for hit in self.cm_hits:
             self.seen_cms.add(hit.cm)
             self.seqids_withhits.add(hit.seqname)
+            if hit.seqname not in self.seqname_to_hits:
+                self.seqname_to_hits[hit.seqname] = []
+                self.seqname_to_hits[hit.seqname].append(hit)
+            else:
+                self.seqname_to_hits[hit.seqname].append(hit)
+
         for rec in self.seq_records:
             self.seqids_general.add(rec.id)
 
+        _GetUniqueLoci(self)
 
-    def _GetCmHits(tblout):
+    def _GetCmHits(self, tblout):
         hit_objects = []
         for dic in PU.ParseCmscanTblout:
             hit_objects.append(CmHit(dic))
         return hit_objects
 
-    def _GetSeqRecords(self):
+    def _GetSeqRecords(self, seq_fi):
         seq_records = []
         for rec in PU.ParseSequenceFile(seq_fi):
             seq_records.append(rec)
@@ -51,31 +60,23 @@ class CmAnalysis:
 
     def _GetUniqueLoci(self):
         #Not finished TODO
-        # from util import Overlap
-        uniq_loci = []
+        self.unique_loci = []
 
-        for hit in self.cm_hits:
-            name = hit.seqname
-            start = hit.seq_from
-            end = hit.seq_to
-            name_mdl = hit.cm
-            e_val = abs(log10(hit.evalue))
-
-            if len(uniq_loci) == 0:  #Start, take first hit as locus
-                locus = {'name' : name, 'start' : start, 'end' : end, name_mdl : e_val}
-                uniq_loci.append(locus)
-                continue
-            else:
-                for locus in uniq_loci:    #Check if hit overlaps with existing hits
-                    if Overlap(start, end, int(locus['start']), int(locus['end'])) > 0.90:  #Overlapping hits found
-                        locus[name_mdl] = e_val
+        for seqname in self.seqname_to_hits:
+            for hit in seqname_to_hits[seqname]:
+                loci = []
+                for l in loci:
+                    if l.add_hit(hit): #if adding successful then break
                         break
-                else: #New Locus found
-                    #print 'no overlap', overlap(start, end, locus['start'], locus['end'])
-                    locus = {'name' : name, 'start' : start, 'end' : end, name_mdl : e_val}
-                    uniq_loci.append(locus)
+                    else: #if not - continue checking all other loci
+                        continue
+                loci.append(CompoundCmHit(hit)) #if the hit couldn't be added to any existing hit -> create new locus
+            self.unique_loci += loci
 
-        return uniq_loci
+
+    def _MapHits(self):
+        #Move sequence name -> hits mapping from __init__ to here
+        pass
 
     #Methods for post-intit data structure manipulation
     def add_seq(self, seq_records):
