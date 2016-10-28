@@ -41,9 +41,34 @@ def Overlap(start1, end1, start2, end2):
     return frac_overlap
 
 
+def AlignLoci(outname, fasta, loci):
+    '''AlignLoci - build a sequence alignment from several loci
+    Args:
+        outname - name of the outfile
+        fasta(string) - File containing Sequences in FASTA-format
+        loci - list of tuples (FASTA-header, from, to, inc)
+    Returns:
+
+    '''
+    from Bio import SeqIO
+
+    records = {}
+    FAin = open(fasta, "rU")
+    for rec in SeqIO.parse(FAin, 'fasta'):
+        records[rec.id] = rec
+
+    FAout = open(outname, 'w')
+    for i in loci:
+        id, fr, to, inc = i
+        seq = records[id]
+        SeqIO.write(seq[int(fr):int(to)], FAout, 'fasta')
+
+    #Then perform alifold, mlocarna, (or AliDot) on it
+    return 0
+    
 
 __author__ = "romanoch"
 __date__ = "$Oct 25, 2016 5:13:02 PM$"
 
 if __name__ == "__main__":
-    print "Hello World"    
+    print "Hello World"
