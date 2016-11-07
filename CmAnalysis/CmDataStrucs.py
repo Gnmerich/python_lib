@@ -82,9 +82,10 @@ class CompoundCmHit:
             self.seqID    = seed_hit.accession
             self.seq_from = seed_hit.seq_from
             self.seq_to   = seed_hit.seq_to
-            self.range =  seed_hit.range
-            self.cms   =  []
-            self.cms.append((seed_hit.cm, seed_hit.evalue, seed_hit.seq_range))
+            self.range    = seed_hit.range
+            self.cms      = [seed_hit.cm]
+            self.evalues  = {seed_hit.cm : seed_hit.evalue}
+            self.ranges   = {seed_hit.cm : seed_hit.seq_range}
 
     def add_hit(self, hit):
         '''Add a hit to an existing CompountCmHit object
@@ -102,13 +103,9 @@ class CompoundCmHit:
         elif not hit.seqname == self.seqname:
             raise ValueError('Hit belongs to different seq, seed: ' + self.seqname)
         elif Overlap(self.seq_from, self.seq_to, hit.seq_from, hit.seq_to) > self.overlap_threshold:
-            self.cms.append((hit.cm, hit.evalue, hit.seq_range))
+            self.cms.append(hit.cm)
+            self.evalues[hit.cm] = hit.evalue
+            self.ranges[hit.cm] = hit.seq_range
             return True
         else:
             return False
-
-
-    def cmVector(self): #TODO
-        '''Write e-value vector of this compound locus'''
-
-        pass

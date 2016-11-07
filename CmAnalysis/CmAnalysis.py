@@ -102,3 +102,21 @@ class CmAnalysis:
             self.cm_hits.add(new_hit)
             self.seen_cms.add(new_hit.cm)
             self.seqids_withhits.add(new_hit.seqname)
+
+    def cmVectors(self, filename=None):
+        '''Compose E-value vectors of all unique locis'''
+        cm_sorted = sorted(self.cms)
+        if filename is None:
+            filename = 'vectors.out'
+
+        with open(filename, 'w') as VEC_OUT:
+            VEC_OUT.write('\t'.join() + '\n') #Header
+            for locus in unique_loci:
+                evals = []
+                for cm in cm_sorted:
+                    try:
+                        evals.append(locus.evalues[cm])
+                    except KeyError:
+                        evals.append(0)
+                VEC_OUT.write(locus.seqname + '\t')
+                VEC_OUT.write('\t'.join(evals) + '\n')
