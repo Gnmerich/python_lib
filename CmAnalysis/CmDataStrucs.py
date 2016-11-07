@@ -20,7 +20,7 @@ class CmHit:
         self.seq_from  = int(dic['from'])
         self.seq_to    = int(dic['to'])
         self.seq_range = (self.seq_from, self.seq_to)
-
+        #TODO Hits on - strand have seq_to > seq_from!!
         self.strand = dic['strand']
         self.trunc = dic['trunc']
 
@@ -37,6 +37,10 @@ class CmHit:
         # self.pass = dic['pass']
         # self.mdl = dic['mdl']
         # self.description = dic['description']
+
+    def _validate(self):
+        '''Verify data structure integrity'''
+        pass
 
     def seq_record(self):
         '''Return SeqRecord Object when self.seq is set
@@ -55,6 +59,7 @@ class CmHit:
         else:
             raise ValueError('No Sequence found')
 
+
 class CompoundCmHit:
     '''CompoundCmHit - Store overlapping hits of cmsearch
     Args:
@@ -66,18 +71,20 @@ class CompoundCmHit:
     from utils import Overlap
 
     def __init__(self, seed_hit=None):
+        #Check input
         if seed_hit is None:
             raise ValueError('Needs Seed for initialization')
         elif not isinstance(seed_hit, CmHit):
             raise TypeError('Wrong Seed Hit format (must be CmHit)')
-        self.overlap_threshold = 0.90
-        self.seqname  = seed_hit.seqname
-        self.seqID    = seed_hit.accession
-        self.seq_from = seed_hit.seq_from
-        self.seq_to   = seed_hit.seq_to
-        self.range =  seed_hit.range
-        self.cms   =  []
-        self.cms.append((seed_hit.cm, seed_hit.evalue, seed_hit.seq_range))
+        else:
+            self.overlap_threshold = 0.90
+            self.seqname  = seed_hit.seqname
+            self.seqID    = seed_hit.accession
+            self.seq_from = seed_hit.seq_from
+            self.seq_to   = seed_hit.seq_to
+            self.range =  seed_hit.range
+            self.cms   =  []
+            self.cms.append((seed_hit.cm, seed_hit.evalue, seed_hit.seq_range))
 
     def add_hit(self, hit):
         '''Add a hit to an existing CompountCmHit object
@@ -92,7 +99,7 @@ class CompoundCmHit:
         '''
         if not isinstance(hit, CmHit):
             raise TypeError('Wrong Seed Hit format (must be CmHit)')
-        elif not hit.seqname == self.seqname
+        elif not hit.seqname == self.seqname:
             raise ValueError('Hit belongs to different seq, seed: ' + self.seqname)
         elif Overlap(self.seq_from, self.seq_to, hit.seq_from, hit.seq_to) > self.overlap_threshold:
             self.cms.append((hit.cm, hit.evalue, hit.seq_range))
@@ -101,5 +108,7 @@ class CompoundCmHit:
             return False
 
 
-    def test(self):
+    def cmVector(self): #TODO
+        '''Write e-value vector of this compound locus'''
+
         pass

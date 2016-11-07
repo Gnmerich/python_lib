@@ -64,8 +64,14 @@ def ParseCmscanStdOut(filename):
         print 'No such file!'
         sys.exit() #remains here until i figure out how to solve properly TODO
 
+    mode = None
     for l in STDOUTFILE:
-        break
+        line = line.rstrip('\n')
+
+        if line[0] == '#':
+            continue
+        elif line == 'Internal CM pipeline statistics summary:':
+            break
 
     STDOUTFILE.close()
     return
