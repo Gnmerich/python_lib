@@ -1,4 +1,4 @@
-def UniqueLoci(hit_list):
+def _UniqueLoci(hit_list): #DEPRECATED
     unique_positions = []
     for hit in hit_list:
         name = hit['name']
@@ -65,10 +65,7 @@ def AlignLoci(outname, fasta, loci):
 
     #Then perform alifold, mlocarna, (or AliDot) on it
     return 0
-    
+
 
 __author__ = "romanoch"
 __date__ = "$Oct 25, 2016 5:13:02 PM$"
-
-if __name__ == "__main__":
-    print "Hello World"

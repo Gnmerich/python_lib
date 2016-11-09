@@ -16,7 +16,7 @@ args = p.parse_args()
 analysis = CmAnalysis(args.TB, args.FA)
 
 #loci ausprinten fuer jedes genom
-analysis.cm_hits
-analysis.unique_loci
+#analysis.cm_hits
+#analysis.unique_loci
 
 #
