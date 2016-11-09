@@ -15,26 +15,71 @@ class CmAnalysis:
 
     def __init__(self, tblout_fi=None, seq_fi=None):
         if tblout_fi is None or seq_fi is None:
-            raise ValueError('No arguments given!')
-        self.cm_hits         = _GetCmHits(tblout_fi)
-        self.seq_records     = _GetSeqRecords(seq_fi)
-
+            raise ValueError('No arguments provided!')
+        self.cm_hits        = _GetCmHits(tblout_fi)
+        self.seq_records    = _GetSeqRecords(seq_fi)
+        self.hit_map        = {}
+        self.loci_map       = {}
+        #Fill Sets
         self.seqids_general  = set()
         self.seqids_withhits = set()
         self.seen_cms        = set()
         _FillSets(self)
-
-        self.seqname_to_hits = {}
-        self.seqname_to_loci = {}
+        #Find unique loci
         self.unique_loci     = []
-        _GetUniqueLoci(self) #Finally, identify unique loci
-        _MapHits(self)  #fill mapping data structures
+        _GetUniqueLoci(self)
+
+    def MapHits(self, attribute):
+        '''Generate a Mapping for your desired attribute
+            eg. mapping['attribute'] -> [matching hits]
+            Seqname: mapping['Dengue Virus 1'] -> [CmHits in Dengue Virus 1]
+            CM: mapping['SL.KOKV.1'] -> [CmHits with SL.KOKV.1]
+            Evalue (stupid but possible): mapping[evalue=0.00045] -> [CmHits with evalue=0.00045]
+        '''
+        if attribute in self.hit_map:                  #Dictionary already exists
+            return self.hit_map[attribute]
+        elif attribute not in self.cm_hits[0].__dict__: #Stop if attribute does not exist
+            return False
+        else:
+            tmp_dic = {}
+            for hit in self.cm_hits:
+                key = hit.__dict__[attribute]
+                try:
+                    tmp_dic[key].append(hit)
+                except KeyError:
+                    tmp_dic[key] = []
+                    tmp_dic[key].append(hit)
+
+            self.hit_map[attribute] = tmp_dic
+            return self.hit_map[attribute]
+
+    def MapLoci(self, attribute):
+        '''Same as above just with unique loci and not hits (caution: just possible for seqname and accession numbers)
+        '''
+        if attribute in self.loci_map:
+            return self.loci_map[attribute]
+        elif attribute not in ['seqname', 'accession']: #
+            return False:
+        else:
+            tmp_dic = {}
+            for hit in self.cm_hits:
+                key = hit.__dict__[attribute]
+                try:
+                    tmp_dic[key].append(hit)
+                except KeyError:
+                    tmp_dic[key] = []
+                    tmp_dic[key].append(hit)
+
+            self.hit_map[attribute] = tmp_dic
+            return self.hit_map[attribute]
 
 
+    def _UpdateMap(self, CmHit):
+        pass
 
     def _GetCmHits(self, tblout):
         hit_objects = []
-        for dic in PU.ParseCmscanTblout:
+        for dic in PU.ParseCmscanTblout(tblout):
             hit_objects.append(CmHit(dic))
         return hit_objects
 
@@ -45,7 +90,7 @@ class CmAnalysis:
         return seq_records
 
     def _FillSets(self):
-        '''Iterate over hits and fill sets '''
+        '''Iterate over hits and fill sets'''
         for hit in self.cm_hits:
             self.seen_cms.add(hit.cm)
             self.seqids_withhits.add(hit.seqname)
@@ -53,26 +98,10 @@ class CmAnalysis:
         for rec in self.seq_records:
             self.seqids_general.add(rec.id)
 
-    def _MapHits(self):
-        '''Gather information about how many hits we have and how they are mapped'''
-        for hit in self.cm_hits:
-            if hit.seqname not in self.seqname_to_hits:
-                self.seqname_to_hits[hit.seqname] = []
-                self.seqname_to_hits[hit.seqname].append(hit)
-            else:
-                self.seqname_to_hits[hit.seqname].append(hit)
-
-        for l in self.unique_loci:
-            if l.seqname not in self.seqname_to_loci:
-                self.seqname_to_loci[l.seqname] = []
-                self.seqname_to_loci[l.seqname].append(l)
-            else:
-                self.seqname_to_loci[l.seqname].append(l)
-
     def _GetUniqueLoci(self):
-        #Not finished TODO
-        for seqname in self.seqname_to_hits:
-            for hit in seqname_to_hits[seqname]:
+        MapHits(self, 'seq')
+        for seqname in self.hit_map['seqname']:
+            for hit in self.hit_map['seq'][seqname]:
                 loci = []
                 for l in loci:
                     if l.add_hit(hit): #if adding successful then break
@@ -104,7 +133,9 @@ class CmAnalysis:
             self.seqids_withhits.add(new_hit.seqname)
 
     def cmVectors(self, filename=None):
-        '''Compose E-value vectors of all unique locis'''
+        '''Compose E-value vectors of all unique locis
+        #TODO write Doc
+        '''
         cm_sorted = sorted(self.cms)
         if filename is None:
             filename = 'vectors.out'
