@@ -1,7 +1,7 @@
 #Data Structures for Storage of CmScan/CmSearch Output
 
 class CmHit:
-    '''CmHit - Store one result of cmsearch in easy and accessible manner
+    '''CmHit - Data Container for CMsearch output
     '''
 
     def __init__(self, dic=None):
@@ -78,6 +78,7 @@ class CompoundCmHit:
             raise TypeError('Wrong Seed Hit format (must be CmHit)')
         else:
             self.overlap_threshold = 0.90
+            self.seq      = seed_hit.seq
             self.seqname  = seed_hit.seqname
             self.seqID    = seed_hit.accession
             self.seq_from = seed_hit.seq_from
@@ -109,3 +110,20 @@ class CompoundCmHit:
             return True
         else:
             return False
+
+    def seq_record(self):
+        '''Return SeqRecord Object when self.seq is set
+        '''
+        from Bio.Seq import Seq
+        from Bio.SeqRecord import SeqRecord
+        from Bio.Alphabet import IUPAC
+
+        if self.seq:
+            rec = SeqRecord(Seq(self.seq, IUPAC.unambiguous_rna),
+                id=self.seqname,
+                name=self.seqname,
+                description='')
+            #TODO Add cm annotation to SeqRecord
+            return rec
+        else:
+            raise ValueError('No Sequence found')
