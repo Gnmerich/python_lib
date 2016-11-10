@@ -1,4 +1,5 @@
 #Data Structures for Storage of CmScan/CmSearch Output
+from utils import Overlap as Overlap
 
 class CmHit:
     '''CmHit - Data Container for CMsearch output
@@ -8,10 +9,10 @@ class CmHit:
         if dic is None:
             raise ValueError('No dictionary given')
 
-        self.seqname = dic['name']
+        self.seqname       = dic['name']
         self.seq_accession = dic['accession']
-        self.cm = dic['query_name']
-        self.cm_accession = dic['accession_mdl']
+        self.cm            = dic['query_name']
+        self.cm_accession  = dic['accession_mdl']
 
         self.cm_from  = int(dic['mdl_from'])
         self.cm_to    = int(dic['mdl_to'])
@@ -22,20 +23,18 @@ class CmHit:
         self.seq_range = (self.seq_from, self.seq_to)
         #TODO Hits on - strand have seq_to > seq_from!!
         self.strand = dic['strand']
-        self.trunc = dic['trunc']
+        self.trunc  = dic['trunc']
 
-        self.gc = dic['gc']
-        self.bias = dic['bias']
+        self.gc       = dic['gc']
+        self.bias     = dic['bias']
         self.bitscore = dic['score']
-        self.evalue = float(dic['e-value'])
-        self.inc = dic['inc']
+        self.evalue   = float(dic['e-value'])
+        self.inc      = dic['inc']
 
         self.struc = None
-        self.seq = None #Just gets filled when parsing from stdout
+        self.seq   = None     #Just gets filled when parsing from stdout
 
-        # Omitted, serve no practical purpose
-        # self.pass = dic['pass']
-        # self.mdl = dic['mdl']
+        # Not implemented in parser
         # self.description = dic['description']
 
     def _validate(self):
@@ -80,10 +79,10 @@ class CompoundCmHit:
             self.overlap_threshold = 0.90
             self.seq      = seed_hit.seq
             self.seqname  = seed_hit.seqname
-            self.seqID    = seed_hit.accession
+            self.seqID    = seed_hit.seq_accession
             self.seq_from = seed_hit.seq_from
             self.seq_to   = seed_hit.seq_to
-            self.range    = seed_hit.range
+            self.range    = seed_hit.seq_range
             self.cms      = [seed_hit.cm]
             self.evalues  = {seed_hit.cm : seed_hit.evalue}
             self.ranges   = {seed_hit.cm : seed_hit.seq_range}
@@ -127,3 +126,6 @@ class CompoundCmHit:
             return rec
         else:
             raise ValueError('No Sequence found')
+
+#    def __str__(self):
+#        return ''
