@@ -1,3 +1,6 @@
+from Bio import SeqIO
+import re
+
 def ParseCmscanTblout(filename):
     '''Parse the Output of cmscan --tblout
     For detailed description of the .tblout format, please refer to
@@ -79,18 +82,19 @@ def ParseCmscanStdOut(filename):
 
 def ParseSequenceFile(filename):
     formats = ['fasta', 'genbank', 'gb', 'embl', 'seqxml', 'tab']
-    recs = []
+    recs = {}
 
     for fmt in formats:
         try:
-            for r in SeqIO.parse(filename, fmt):
-                recs.append(r)
+            recs = SeqIO.to_dict(SeqIO.parse(filename, fmt))
+            #for r in SeqIO.parse(filename, fmt):
+                #recs.append(r)
+            break
         except IOError:
             print('Could not open ' + filename)
             #sys.exit() #TODO Don't know whether i need those excepts
         except ValueError:
             print('Could not use format: ' + fmt)
-            continue
     return recs
 
 
@@ -103,7 +107,6 @@ def WussToVienna(wuss):
     Raises:
         atm - Nothing (TypeError: if wuss is not a string)
     '''
-    import re
 
     vienna = wuss
     #Base pairs
