@@ -97,6 +97,7 @@ class CmAnalysis:
     def _GetHitSequences(self):
         for hit in self.cm_hits:
             seq = self.seq_records[hit.seqname].seq
+            print seq[hit.seq_from:hit.seq_to]
 
     def _FillSets(self):
         '''Iterate over hits and fill sets'''

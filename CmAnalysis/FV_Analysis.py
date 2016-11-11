@@ -3,7 +3,7 @@
 from CmAnalysis import CmAnalysis
 import CmDataStrucs as CD
 import Parsing_Utils as PU
-import argparse
+import argparse, sys
 
 #Command line Argument Parsing
 p=argparse.ArgumentParser(description='Analyze Flavivirus CMsearch runs')
@@ -15,8 +15,18 @@ args = p.parse_args()
 
 analysis = CmAnalysis(args.TB, args.FA)
 
-#loci ausprinten fuer jedes genom
-#analysis.cm_hits
-#analysis.unique_loci
+for seqname in analysis.MapLoci('seqname'):
+    print seqname
+    for locus in analysis.MapLoci('seqname')[seqname]:
+        print locus.range, locus.cms
+        print locus.evalues
 
-#
+sys.exit()
+# for compound in analysis.unique_loci:
+#     print compound.seqname
+#     print compound.cms
+#     print compound.range
+#     print compound.ranges
+
+#Print Vectors
+#analysis.cmVectors('MVV_all.vecs')
