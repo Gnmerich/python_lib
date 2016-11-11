@@ -8,6 +8,7 @@ if __name__ == "__main__":
 import Parsing_Utils as PU
 from Bio import SeqIO
 from CmDataStrucs import CmHit, CompoundCmHit
+from math import log10
 
 class CmAnalysis:
     '''CmAnalysis - Store results of cmsearch and analyze several criteria
@@ -155,7 +156,7 @@ class CmAnalysis:
                 evals = []
                 for cm in cm_sorted:
                     try:
-                        evals.append(str(locus.evalues[cm]))
+                        evals.append(str(abs(log10(locus.evalues[cm]))))
                     except KeyError:
                         evals.append(str(0))
                 VEC_OUT.write(locus.seqname + '\t')

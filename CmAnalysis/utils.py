@@ -1,3 +1,5 @@
+from math import log10
+
 def _UniqueLoci(hit_list): #DEPRECATED
     unique_positions = []
     for hit in hit_list:
@@ -39,6 +41,26 @@ def Overlap(start1, end1, start2, end2):
     frac_overlap = (shared1 + shared2) / 2
 
     return frac_overlap
+
+
+def Evalue4Bed(evalue, scale_factor=50, max_score=1000):
+    '''Convert cmsearch evalue (float) to an integer for the BED-file score field
+    Args:
+        evalue (float)
+        scale_factor (int): scale log10(evalue) by this factor, Default = 50
+        max_score (int): cutoff, values > max_score are set to max_score, Default = 1000
+    Returns:
+        scaled evalue (int)
+    '''
+    ev_log = log10(evalue)
+    ev_int = int(ev_log)
+
+    if ev_int > 0:
+        return 0
+    elif abs(ev_int) * scale_factor > max_score:
+        return max_score
+    else:
+        return abs(ev_int) * scale_factor
 
 
 def AlignLoci(outname, fasta, loci):
