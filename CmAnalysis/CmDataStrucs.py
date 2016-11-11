@@ -58,6 +58,18 @@ class CmHit:
         else:
             raise ValueError('No Sequence found')
 
+    def BedStr(self):
+        '''Return hit formatted in BED-format
+        '''
+        from utils import Evalue4Bed
+        bed = []
+        bed.append(self.seqname)
+        bed.append(str(self.seq_from-1))
+        bed.append(str(self.seq_to-1))
+        bed.append(self.cm)
+        bed.append(str(Evalue4Bed(self.evalue)))
+        bed.append(self.strand)
+        return '\t'.join(bed)
 
 class CompoundCmHit:
     '''CompoundCmHit - Store overlapping hits of cmsearch
@@ -82,30 +94,35 @@ class CompoundCmHit:
             self.seqID    = seed_hit.seq_accession
             self.seq_from = seed_hit.seq_from
             self.seq_to   = seed_hit.seq_to
+            self.strand   = seed_hit.strand
             self.range    = seed_hit.seq_range
             self.cms      = [seed_hit.cm]
             self.evalues  = {seed_hit.cm : seed_hit.evalue}
             self.ranges   = {seed_hit.cm : seed_hit.seq_range}
+            self._hits    = [seed_hit]
 
     def add_hit(self, hit):
         '''Add a hit to an existing CompountCmHit object
         Args:
             hit(CmHit)
         Returns:
-            True - Hit added successfully
-            False - Hit is not overlapping with seed hit and was not added
+            True: Hit added successfully
+            False: Hit is not overlapping with seed hit and was not added
         Raises:
-            TypeError - Hit is not CmHit object
-            ValueError - Hit is on different sequence than seed hit
+            TypeError: Hit is not CmHit object
+            ValueError: Hit is on different sequence than seed hit
         '''
         if not isinstance(hit, CmHit):
             raise TypeError('Wrong Seed Hit format (must be CmHit)')
         elif not hit.seqname == self.seqname:
             raise ValueError('Hit belongs to different seq, seed: ' + self.seqname)
+        elif hit.strand != self.strand:
+            return False
         elif Overlap(self.seq_from, self.seq_to, hit.seq_from, hit.seq_to) > self.overlap_threshold:
             self.cms.append(hit.cm)
             self.evalues[hit.cm] = hit.evalue
             self.ranges[hit.cm] = hit.seq_range
+            self._hits.append(hit)
             return True
         else:
             return False
@@ -127,5 +144,12 @@ class CompoundCmHit:
         else:
             raise ValueError('No Sequence found')
 
+    def BedStr(self):
+        bed = []
+        for hit in self._hits:
+            bed.append(hit.BedStr())
+        return '\n'.join(bed)
+
+#TODO implement object printing .. BED-like format might be a quite useful representation
 #    def __str__(self):
 #        return ''
