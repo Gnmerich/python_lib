@@ -14,7 +14,7 @@ def main():
     p=argparse.ArgumentParser(description='Do various things with alignments')
     #What to do
         #default: look at whole alignment    #just look a slice    #do a sliding window     #build a CM?
-    p.add_argument('--mode', default='whole', choices=['whole', 'slice', 'window'], help='Select mode of action')
+    p.add_argument('--mode', default='whole', choices=['whole', 'slice', 'window'], required=True, help='Select mode of action')
 
     p.add_argument('--start', type=int, default=1, help='Slice Start,(1-indexed), Default: 1')
     p.add_argument('--end',   type=int, default=None, help='Slice End, Default: len(aln[0])')
