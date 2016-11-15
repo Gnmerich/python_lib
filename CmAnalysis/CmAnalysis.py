@@ -18,7 +18,7 @@ class CmAnalysis:
         if tblout_fi is None or seq_fi is None:
             raise ValueError('No arguments provided!')
         #General data
-        self.cm_hits        = self._GetCmHits(tblout_fi)
+        self.cm_hits, self.cm_hits_UIDs  = self._GetCmHits(tblout_fi)
         self.seq_records    = self._GetSeqRecords(seq_fi)
         self.hit_map        = {}
         self.loci_map       = {}
@@ -28,8 +28,7 @@ class CmAnalysis:
         self.seen_cms        = set()
         self._FillSets()
         #unique loci
-        self.unique_loci     = []
-        self._GetUniqueLoci()
+        self.unique_loci, self.unique_loci_uids = self._GetUniqueLoci()
         #extract rna sequence for each hit from fasta file
         self._GetHitSequences()
 
@@ -86,9 +85,15 @@ class CmAnalysis:
 
     def _GetCmHits(self, tblout):
         hit_objects = []
+        cm_hits_UIDs = {}
+        uid = 0
         for dic in PU.ParseCmscanTblout(tblout):
-            hit_objects.append(CmHit(dic))
-        return hit_objects
+            tmp = CmHit(dic)
+            tmp.uid = uid
+            hit_objects.append(tmp)
+            cm_hits_UIDs[uid] = tmp
+            uid += 1
+        return hit_objects, cm_hits_UIDs
 
     def _GetSeqRecords(self, seq_fi):
         seq_records = {}
@@ -97,8 +102,7 @@ class CmAnalysis:
 
     def _GetHitSequences(self):
         for hit in self.cm_hits:
-            seq = self.seq_records[hit.seqname].seq
-            print seq[hit.seq_from:hit.seq_to]
+            hit.seq = self.seq_records[hit.seqname].seq[hit.seq_from:hit.seq_to]
 
     def _FillSets(self):
         '''Iterate over hits and fill sets'''
@@ -110,7 +114,10 @@ class CmAnalysis:
             self.seqids_general.add(self.seq_records[rec_name].id)
 
     def _GetUniqueLoci(self):
-        self.MapHits('seqname')
+        self.MapHits('seqname') #Generate dictionary where seqname->[list of cm hits]
+        unique_loci = []
+        unique_loci_uids = {}
+
         for seqname in self.hit_map['seqname']:
             loci = []
             for hit in self.hit_map['seqname'][seqname]:
@@ -119,7 +126,29 @@ class CmAnalysis:
                         break
                 else: #if not added to any existing locus - creat new one
                     loci.append(CompoundCmHit(hit)) #if the hit couldn't be added to any existing hit -> create new locus
-            self.unique_loci += loci
+            unique_loci += loci
+        #Assign a Unique ID to each locus
+        uid = 0
+        for locus in unique_loci:
+            locus.uid = uid
+            unique_loci_uids[uid] = locus
+            uid += 1
+        return unique_loci, unique_loci_uids
+
+    # def HitsInRange(self, seqname, start, end):
+    #     '''Return all unique loci which overlap to some degree
+    #     TODO - handle minus strand hits
+    #     '''
+    #     self.MapLoci('seqname') #Generate dictionary where seqname->[list of unique loci]
+    #     overlaps = []
+    #     for locus in self.loci_map[seqname]:
+    #         if locus.seq_from > start and locus.seq_from < end:
+    #             overlaps.append(locus)
+    #         elif locus.seq_to > start and locus.to < end:
+    #             overlaps.append(locus)
+    #         else:
+    #             continue
+    #     return overlaps
 
     #Methods for post-intit data structure manipulation (TODO: get rid of those methods)
     def add_seq(self, seq_records):
@@ -143,15 +172,19 @@ class CmAnalysis:
             self.seqids_withhits.add(new_hit.seqname)
 
     def cmVectors(self, filename=None):
-        '''Compose E-value vectors of all unique locis
-        #TODO write Doc
+        '''Compose E-value vectors of all unique loci, writes Vectorfile and Mapfile
+        Args:
+            filename (string): Name of Output File
         '''
         cm_sorted = sorted(self.seen_cms)
         if filename is None:
             filename = 'vectors.out'
 
-        with open(filename, 'w') as VEC_OUT:
-            VEC_OUT.write('\t'.join(cm_sorted) + '\n') #Header
+        with open(filename, 'w') as VEC_OUT, open('vec.map', 'w') as MAPFILE:
+            #Headers
+            VEC_OUT.write('\t'.join(cm_sorted) + '\n')
+            MAPFILE.write('foo')
+            #Data
             for locus in self.unique_loci:
                 evals = []
                 for cm in cm_sorted:
@@ -161,3 +194,4 @@ class CmAnalysis:
                         evals.append(str(0))
                 VEC_OUT.write(locus.seqname + '\t')
                 VEC_OUT.write('\t'.join(evals) + '\n')
+                MAPFILE.write(locus.BedStr())

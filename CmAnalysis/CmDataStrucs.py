@@ -9,6 +9,7 @@ class CmHit:
         if dic is None:
             raise ValueError('No dictionary given')
 
+        self.uid           = None
         self.seqname       = dic['name']
         self.seq_accession = dic['accession']
         self.cm            = dic['query_name']
@@ -88,14 +89,17 @@ class CompoundCmHit:
         elif not isinstance(seed_hit, CmHit):
             raise TypeError('Wrong Seed Hit format (must be CmHit)')
         else:
-            self.overlap_threshold = 0.90
+            self.uid      = None
             self.seq      = seed_hit.seq
             self.seqname  = seed_hit.seqname
             self.seqID    = seed_hit.seq_accession
+            self.overlap_threshold = 0.90
+
             self.seq_from = seed_hit.seq_from
             self.seq_to   = seed_hit.seq_to
             self.strand   = seed_hit.strand
             self.range    = seed_hit.seq_range
+
             self.cms      = [seed_hit.cm]
             self.evalues  = {seed_hit.cm : seed_hit.evalue}
             self.ranges   = {seed_hit.cm : seed_hit.seq_range}
