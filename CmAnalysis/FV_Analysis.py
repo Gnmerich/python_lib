@@ -9,24 +9,22 @@ import argparse, sys
 p=argparse.ArgumentParser(description='Analyze Flavivirus CMsearch runs')
 p.add_argument('TB', help='CMsearch TBLOUT file')
 p.add_argument('FA', help='Source seqence file')
-p.add_argument('--threshold', type=float, default=0.001, help='Minimum E-Value (default 0.001)')
+#p.add_argument('--threshold', type=float, default=0.001, help='Minimum E-Value (default 0.001)')
 #p.add_argument('-o', type=str, help='Output file name', default='vecs_summary.out')
 args = p.parse_args()
 
+#Build Analysis Object
 analysis = CmAnalysis(args.TB, args.FA)
 
-for seqname in analysis.MapLoci('seqname'):
-    print seqname
-    for locus in analysis.MapLoci('seqname')[seqname]:
-        print locus.range, locus.cms
-        print locus.evalues
+#Iterate over all cmsearch-hits and print them in BED-format to STDOUT:
+for hit in analysis.cm_hits:
+    print hit.BedStr()
 
-sys.exit()
-# for compound in analysis.unique_loci:
-#     print compound.seqname
-#     print compound.cms
-#     print compound.range
-#     print compound.ranges
-
-#Print Vectors
-#analysis.cmVectors('MVV_all.vecs')
+#Iterate over all unique (compound-) loci and print information to STDOUT
+for unique_locus in analysis.unique_loci:
+    print 'Sequence Name:', unique_locus.seqname
+    print 'Covar Models:', unique_locus.cms
+    print 'Range:', unique_locus.range
+    print 'Strand:', unique_locus.strand
+    #Print all hits of this locus in BED-format to STDOUT:
+    print unique_locus.BedStr()
