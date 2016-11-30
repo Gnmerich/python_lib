@@ -44,6 +44,8 @@ class CmAnalysis:
             return self.hit_map[attribute]
         elif attribute not in self.cm_hits[0].__dict__: #Stop if attribute does not exist
             return False
+        #TODO
+        #Do this via setattr(), getattr() and hasattr() !
         else:
             tmp_dic = {}
             for hit in self.cm_hits:
@@ -178,12 +180,12 @@ class CmAnalysis:
         '''
         cm_sorted = sorted(self.seen_cms)
         if filename is None:
-            filename = 'vectors.out'
+            filename = 'vectors'
 
-        with open(filename, 'w') as VEC_OUT, open('vec.map', 'w') as MAPFILE:
+        with open(filename+'.vec', 'w') as VEC_OUT, open(filename+'.map', 'w') as MAPFILE:
             #Headers
             VEC_OUT.write('\t'.join(cm_sorted) + '\n')
-            MAPFILE.write('foo')
+            MAPFILE.write('#UID\tFROM\tTO\tSTRAND\tSEQNAME\n')
             #Data
             for locus in self.unique_loci:
                 evals = []
@@ -192,6 +194,7 @@ class CmAnalysis:
                         evals.append(str(abs(log10(locus.evalues[cm]))))
                     except KeyError:
                         evals.append(str(0))
-                VEC_OUT.write(locus.seqname + '\t')
+                VEC_OUT.write(str(locus.uid) + '\t')
                 VEC_OUT.write('\t'.join(evals) + '\n')
-                MAPFILE.write(locus.BedStr())
+                mapstr = [str(locus.uid), str(locus.seq_from), str(locus.seq_to), locus.strand, locus.seqname]
+                MAPFILE.write('\t'.join(mapstr) + '\n')

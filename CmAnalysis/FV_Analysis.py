@@ -15,7 +15,8 @@ args = p.parse_args()
 
 #Build Analysis Object
 analysis = CmAnalysis(args.TB, args.FA)
-
+analysis.cmVectors('test')
+sys.exit()
 #Iterate over all cmsearch-hits and print them in BED-format to STDOUT:
 for hit in analysis.cm_hits:
     print hit.BedStr()
